@@ -240,8 +240,8 @@ def clientes():
         # Usuário comum só pode visualizar e buscar
         tab1, tab2 = st.tabs(["📋 Lista de Clientes", "🔍 Buscar Cliente"])
     
-    # Aba de cadastro (apenas para admin)
-    if 'user_role' in st.session_state and st.session_state.user_role == 'admin':
+    # Aba de cadastro (para admin e atendimento)
+    if 'user_role' in st.session_state and (st.session_state.user_role == 'admin' or st.session_state.user_role == 'atendimento'):
         with tab1:
             st.subheader("Novo Cliente")
             
