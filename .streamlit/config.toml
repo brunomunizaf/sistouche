@@ -1,0 +1,3 @@
+[server]
+fileWatcherType = "none"
+port = 8501 
