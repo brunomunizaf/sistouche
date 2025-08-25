@@ -100,33 +100,7 @@ class SupabaseManager:
             st.error(f"❌ Erro ao buscar clientes: {str(e)}")
             return pd.DataFrame()
     
-    def inserir_produto(self, nome, descricao="", preco_unitario=0, categoria=""):
-        """Insere um novo produto no Supabase"""
-        try:
-            data = {
-                'nome': nome,
-                'descricao': descricao,
-                'preco_unitario': preco_unitario,
-                'categoria': categoria,
-                'data_cadastro': datetime.now().isoformat()
-            }
-            
-            result = self.supabase.table('produtos').insert(data).execute()
-            produto_id = result.data[0]['id']
-            return produto_id
-        except Exception as e:
-            st.error(f"❌ Erro ao inserir produto: {str(e)}")
-            return None
-    
-    def buscar_produtos(self):
-        """Retorna todos os produtos do Supabase"""
-        try:
-            result = self.supabase.table('produtos').select('*').order('nome').execute()
-            df = pd.DataFrame(result.data)
-            return df
-        except Exception as e:
-            st.error(f"❌ Erro ao buscar produtos: {str(e)}")
-            return pd.DataFrame()
+
     
     def gerar_numero_orcamento(self):
         """Gera um número único para o orçamento"""
@@ -181,15 +155,28 @@ class SupabaseManager:
                     item_subtotal = item['quantidade'] * item['preco_unitario']
                     subtotal += item_subtotal
                     
+                    # Criar item_data baseado na estrutura da tabela
                     item_data = {
                         'orcamento_id': orcamento_id,
-                        'produto_id': item['produto_id'],
                         'quantidade': item['quantidade'],
                         'preco_unitario': item['preco_unitario'],
                         'subtotal': item_subtotal
                     }
                     
-                    self.supabase.table('itens_orcamento').insert(item_data).execute()
+                    # Adicionar descricao se a tabela suportar, senão usar produto_id como fallback
+                    try:
+                        # Tentar inserir com descricao
+                        item_data['descricao'] = item['descricao']
+                        self.supabase.table('itens_orcamento').insert(item_data).execute()
+                    except Exception as e:
+                        # Se falhar, tentar com produto_id (estrutura antiga)
+                        try:
+                            del item_data['descricao']
+                            item_data['produto_id'] = 1  # ID padrão para item genérico
+                            self.supabase.table('itens_orcamento').insert(item_data).execute()
+                        except Exception as e2:
+                            st.error(f"❌ Erro ao inserir item: {str(e2)}")
+                            raise e2
                 
                 # Atualiza o total do orçamento
                 self.supabase.table('orcamentos').update({
@@ -244,17 +231,14 @@ class SupabaseManager:
             del orcamento['clientes']
             
             # Busca os itens do orçamento
-            itens_result = self.supabase.table('itens_orcamento').select('''
-                *,
-                produtos!inner(nome, descricao)
-            ''').eq('orcamento_id', orcamento_id).execute()
+            itens_result = self.supabase.table('itens_orcamento').select('*').eq('orcamento_id', orcamento_id).execute()
             
             # Processa os itens
             itens = []
             for item in itens_result.data:
-                item['produto_nome'] = item['produtos']['nome']
-                item['produto_descricao'] = item['produtos']['descricao']
-                del item['produtos']
+                # Adicionar colunas para compatibilidade
+                item['produto_nome'] = item.get('descricao', 'Item sem descrição')
+                item['produto_descricao'] = item.get('descricao', '')
                 itens.append(item)
             
             itens_df = pd.DataFrame(itens)

@@ -78,9 +78,9 @@ if not st.session_state.authenticated:
                 st.error("❌ Preencha todos os campos!")
     
     st.info("👥 **Usuários disponíveis:**")
-    st.write("- **bruno** (admin)")
-    st.write("- **melissa** (admin)") 
-    st.write("- **julia** (atendimento)")
+    st.write("- **bruno** (admin): 28187419")
+    st.write("- **melissa** (admin): 130188491") 
+    st.write("- **julia** (atendimento): 5912849123")
     
     st.stop()
 
@@ -449,16 +449,13 @@ def novo_orcamento():
     
     # Botão de cálculo
     if st.button("🧮 Calcular Orçamento"):
-        st.write("🔍 Botão clicado! Iniciando cálculo...")
         
         # Validar campos obrigatórios
-        st.write(f"🔍 Validando campos: largura={largura_cm}, altura={altura_cm}, profundidade={profundidade_cm}, quantidade={quantidade}")
         if not largura_cm or not altura_cm or not profundidade_cm or not quantidade:
             st.error("Preencha todos os campos obrigatórios!")
             return
         
         try:
-            st.write("🔍 Preparando dados para cálculo CPQ...")
             # Preparar dados para o CPQ
             dados_calculo = {
                 "largura_cm": largura_cm,
@@ -468,7 +465,7 @@ def novo_orcamento():
                 "material": material,
                 "quantidade": quantidade,
                 "berco": berco,
-                "nicho": nicho,
+                "nich": nicho,
                 "serigrafia": serigrafia,
                 "num_cores_serigrafia": num_cores_serigrafia,
                 "num_impressoes_serigrafia": num_impressoes_serigrafia,
@@ -483,7 +480,6 @@ def novo_orcamento():
             }
             
             # Calcular usando o CPQ
-            st.write("🔍 Importando módulo CPQ...")
             with st.spinner("Calculando custos com CPQ..."):
                 from cpq_calculator import calcular_custo_caixa_completo
                 
@@ -492,7 +488,6 @@ def novo_orcamento():
                 altura_mm = altura_cm * 10
                 profundidade_mm = profundidade_cm * 10
                 
-                st.write("🔍 Chamando função CPQ...")
                 resultado = calcular_custo_caixa_completo(
                     largura_mm=largura_mm,
                     altura_mm=altura_mm,
@@ -515,7 +510,6 @@ def novo_orcamento():
                     markup=markup_decimal
                 )
             
-            st.write(f"🔍 Resultado recebido: {resultado}")
             if resultado:
                 st.success("✅ Cálculo CPQ concluído com sucesso!")
                 
@@ -599,8 +593,7 @@ def novo_orcamento():
                 
         except Exception as e:
             st.error(f"❌ Erro ao calcular orçamento: {str(e)}")
-            st.write(f"🔍 Detalhes do erro: {type(e).__name__}")
-
+            st.info("Verifique se todos os módulos CPQ estão funcionando corretamente.")
 
 # Função para visualizar orçamentos
 def orcamentos():
@@ -714,3 +707,4 @@ elif pagina == "📊 Orçamentos":
     orcamentos()
 elif pagina == "📈 Relatórios":
     relatorios()
+
